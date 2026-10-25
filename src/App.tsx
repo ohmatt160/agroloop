@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
 const A = '/assets/'
@@ -78,6 +78,9 @@ function QuoteForm() {
         }),
       })
       if (!response.ok) throw new Error(response.status === 429 ? 'Too many requests. Please try again shortly.' : 'We could not submit your request. Please try again.')
+      if (!response.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('The quote service is not available yet. Please try again later.')
+      }
       form.reset()
       setStatus('success')
       setMessage('Thank you. Your quote request has been received.')
@@ -123,7 +126,34 @@ function InvestorPage() {
   return <><Hero page="investors" title={<>Building Africa’s<br />Industrial Backbone For<br />Biological Raw Materials</>} description="Agroloop Is Building Industrial Biological Production Infrastructure That Addresses Import Substitution, Creates Employment, And Demonstrates Africa’s Capability To Produce High-Value Materials For Global Markets." image="investors-hero.webp" action="Get Started" actionHref="#investment-info" /><Intro eyebrow="Investment Thesis" title={<>Industrial-Grade: Financing<br />the New Backbone of<br />Global Supply Chains.</>} text="African manufacturers across food, pharmaceutical, cosmetic, and industrial sectors rely heavily on imported biological raw materials. Agroloop is building the production infrastructure to supply these materials locally, reducing foreign exchange pressure and establishing scalable platforms for export." /><section className="investor-cards section-wrap">{[['icon-market.webp','Market Opportunity','Billions spent annually on imported starches, extracts, proteins, and bio-chemicals that can be produced locally with controlled systems.'],['icon-bioinputs.webp','Import Substitution','Addressing foreign exchange constraints by providing reliable local alternatives to imported industrial inputs.'],['icon-scalable-platform.svg','Scalable Platform','Proven production systems that can be replicated across crop types, geographies, and biological production categories.']].map(([icon,title,text])=><article className="action-card" key={title}><img src={`${A}${icon}`} alt="" /><h3>{title}</h3><p>{text}</p></article>)}</section><div className="investor-transition-mark section-wrap"><img src={`${A}investor-seedling.png`} alt="" /></div><StrategyPanel /><section className="metrics-section section-wrap"><h2>Key Metrics &amp; Milestones</h2><div className="metrics-grid">{[['4','Production Categories'],['10+','Industrial Offtakers'],['50+','Out-Grower Farmers'],['Year-round','Production Capability']].map(([value,label])=><article key={label}><strong>{value}</strong><span>{label}</span></article>)}</div></section><section className="capital-section section-wrap"><div><h2>Use of Capital</h2><p>Capital will be deployed to scale proven production systems, expand processing capabilities, and develop market infrastructure.</p>{[['Production Infrastructure','40%'],['Processing & Equipment','25%'],['Supply Chain & Logistics','20%'],['Working Capital','15%']].map(([name,percent])=><div className="capital-row" key={name}><div><span>{name}</span><strong>{percent}</strong></div><i><b style={{width:percent}} /></i></div>)}</div><article className="highlights"><h3>Investment Highlights</h3><ul><li><b>Proven Production Model</b><span>Operating facilities with established offtake relationships</span></li><li><b>Clear Path to Scale</b><span>Replicable systems across crop types and geographies</span></li><li><b>Import Substitution Focus</b><span>Addressing significant market need with FX benefits</span></li><li><b>Experienced Team</b><span>Agriculture, processing, and industrial supply expertise</span></li><li><b>Social Impact</b><span>Employment creation and out-grower farmer integration</span></li></ul></article></section><section className="investment-info section-wrap" id="investment-info"><img src={`${A}icon-quote.svg`} alt="" /><h2>Investment Information Memorandum</h2><p>Download the complete investment deck including financial projections, market analysis, technical details, and terms.</p><ArrowLink href="mailto:info@agroloop.com" light>Download Investor Pack</ArrowLink><small>Investment documents are provided under confidentiality and for qualified investors only.</small></section></>
 }
 function Footer() { return <footer className="site-footer"><div className="footer-top"><div className="footer-brand"><Mark /><p>Industrial biological production systems</p></div><div><h3>Products</h3><a href="/#products">Industrial Feedstocks</a><a href="/#products">Bio-Chemical Inputs</a><a href="/#products">Bio-Extracts &amp; Actives</a><a href="/#products">Protein &amp; Biomass Systems</a></div><div><h3>Partners</h3><a href="/buyers">Industrial Buyers</a><a href="/buyers#quote">Out-Growers</a><a href="/investors">Investors</a><a href="/#about">Production Systems</a></div><div><h3>Contact</h3><a href="mailto:info@agroloop.com">✉ info@agroloop.com</a><a href="tel:+2340000000000">⌕ +234 XXX XXX XXXX</a></div></div><div className="copyright">© 2026 Agroloop. All rights reserved.</div></footer> }
-export default function App() { const path = window.location.pathname.toLowerCase(); const page = path.startsWith('/buyers') ? 'buyers' : path.startsWith('/investors') ? 'investors' : 'home'; return <><main>{page === 'buyers' ? <BuyerPage /> : page === 'investors' ? <InvestorPage /> : <HomePage />}</main><Footer /></> }
+export default function App() {
+  const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/'
+  const page = path === '/buyers' ? 'buyers' : path === '/investors' ? 'investors' : 'home'
+  useEffect(() => {
+    const pageMeta = {
+      home: {
+        title: 'Agroloop — Growing Africa’s vegetable wealth',
+        description: 'Agroloop supplies reliable, standardized vegetable inputs for Africa’s food industry.',
+      },
+      buyers: {
+        title: 'Industrial Buyers | Agroloop',
+        description: 'Source consistent, standardized biological raw materials for food, pharmaceutical, cosmetic, and industrial production.',
+      },
+      investors: {
+        title: 'Investors | Agroloop',
+        description: 'Explore Agroloop’s investment thesis, strategic focus, and plans to scale biological production infrastructure in Africa.',
+      },
+    }[page]
+    const canonical = `https://www.agroloopfarms.com${path === '/' ? '/' : path}`
+    document.title = pageMeta.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', pageMeta.description)
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonical)
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', pageMeta.title)
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', pageMeta.description)
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonical)
+  }, [page, path])
+  return <><main>{page === 'buyers' ? <BuyerPage /> : page === 'investors' ? <InvestorPage /> : <HomePage />}</main><Footer /></>
+}
 
 
 
