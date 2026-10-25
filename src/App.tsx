@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
 const A = '/assets/'
@@ -21,16 +21,80 @@ function readThemePreference(): ThemePreference {
 
 function ThemeControl() {
   const { theme, setTheme } = useContext(ThemeContext)
+  const [open, setOpen] = useState(false)
+  const controlRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    if (!open) return
+    function dismissOutside(event: PointerEvent) {
+      if (event.target instanceof Node && !controlRef.current?.contains(event.target)) setOpen(false)
+    }
+    function dismissOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    function dismissOnFocusOutside(event: FocusEvent) {
+      if (event.target instanceof Node && !controlRef.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', dismissOutside)
+    document.addEventListener('keydown', dismissOnEscape)
+    document.addEventListener('focusin', dismissOnFocusOutside)
+    return () => {
+      document.removeEventListener('pointerdown', dismissOutside)
+      document.removeEventListener('keydown', dismissOnEscape)
+      document.removeEventListener('focusin', dismissOnFocusOutside)
+    }
+  }, [open])
+  const options: { value: ThemePreference; label: string; detail: string }[] = [
+    { value: 'system', label: 'System', detail: 'Match your device' },
+    { value: 'light', label: 'Light', detail: 'Bright appearance' },
+    { value: 'dark', label: 'Dark', detail: 'Low-light appearance' },
+  ]
+  const currentLabel = options.find(option => option.value === theme)?.label ?? 'System'
   return (
-    <label className="theme-control">
-      <span className="theme-control-label">Theme</span>
-      <select aria-label="Color theme" value={theme} onChange={event => setTheme(event.target.value as ThemePreference)}>
-        <option value="system">System</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-      </select>
-    </label>
+    <div className="theme-control" ref={controlRef}>
+      <button
+        ref={triggerRef}
+        className="theme-trigger"
+        type="button"
+        aria-expanded={open}
+        aria-controls="theme-menu"
+        aria-label={`Color theme: ${currentLabel}`}
+        onClick={() => setOpen(value => !value)}
+      >
+        <ThemeIcon theme={theme} />
+        <span>{currentLabel}</span>
+        <svg className={`theme-chevron${open ? ' is-open' : ''}`} viewBox="0 0 12 12" aria-hidden="true"><path d="m2 4 4 4 4-4" /></svg>
+      </button>
+        <div className="theme-menu" id="theme-menu" role="group" aria-label="Choose color theme" hidden={!open}>
+          {options.map(option => (
+            <button
+              className={`theme-option${theme === option.value ? ' is-selected' : ''}`}
+              type="button"
+              key={option.value}
+              aria-pressed={theme === option.value}
+              onClick={() => {
+                setTheme(option.value)
+                setOpen(false)
+                triggerRef.current?.focus()
+              }}
+            >
+              <ThemeIcon theme={option.value} />
+              <span className="theme-option-copy"><strong>{option.label}</strong><small>{option.detail}</small></span>
+              {theme === option.value && <svg className="theme-check" viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8 3.2 3.2L13 4.5" /></svg>}
+            </button>
+          ))}
+        </div>
+    </div>
   )
+}
+
+function ThemeIcon({ theme }: { theme: ThemePreference }) {
+  if (theme === 'light') return <svg className="theme-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5" /><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" /></svg>
+  if (theme === 'dark') return <svg className="theme-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.1A8.6 8.6 0 0 1 8.9 3.8 8.7 8.7 0 1 0 20.2 15.1Z" /></svg>
+  return <svg className="theme-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4" width="17" height="13" rx="2" /><path d="M8 21h8m-4-4v4" /></svg>
 }
 const products = [
   { title: 'Industrial Feedstocks', text: 'Primary biological inputs produced at scale. Fresh and processed vegetables, cassava-based bulk inputs for industrial use.', tags: ['Food Manufacturing', 'Processing'] },

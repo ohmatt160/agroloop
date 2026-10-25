@@ -50,12 +50,24 @@
 @media(max-width:800px){.investor-transition-mark{padding-right:6%;margin-bottom:22px}.strategic-focus-panel .strategy-grid{grid-template-rows:auto;gap:10px}.strategic-focus-panel .strategy-grid article{min-height:180px;height:auto}.strategic-focus-panel .strategy-grid p,.strategic-focus-panel .strategy-grid li{font-size:10px}}
 @media(max-width:520px){.investor-transition-mark img{width:64px;height:64px}.strategic-focus-panel .strategy-grid{grid-template-columns:1fr}.strategic-focus-panel .strategy-grid article{min-height:155px;padding:16px}.strategic-focus-panel .strategy-grid h3{font-size:15px}}
 
-/* Theme preferences: system mode is resolved before the app renders. */
-.theme-control{display:flex;align-items:center;gap:7px;color:#fff;font-size:11px}
-.theme-control-label{opacity:.8}
-.theme-control select{appearance:none;min-width:83px;border:1px solid rgba(255,255,255,.45);border-radius:24px;padding:8px 28px 8px 12px;background-color:rgba(8,34,11,.72);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='m2 4 4 4 4-4' fill='none' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:#fff;font:inherit;cursor:pointer}
-.theme-control select:focus-visible{outline:2px solid #c8e58b;outline-offset:3px}
-.theme-control option{background:#fff;color:#10180f}
+/* Theme preferences: a branded popover that stays usable by keyboard and touch. */
+.theme-control{position:relative;display:flex;align-items:center;color:#fff;font-size:11px}
+.theme-trigger{display:inline-flex;align-items:center;gap:9px;min-height:40px;border:1px solid rgba(255,255,255,.28);border-radius:28px;padding:8px 12px;background:rgba(5,24,8,.72);backdrop-filter:blur(12px);color:#f7f9f4;font:inherit;font-size:12px;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.theme-trigger:hover{background:rgba(13,43,17,.92);border-color:rgba(255,255,255,.52);transform:translateY(-1px)}
+.theme-trigger:focus-visible,.theme-option:focus-visible{outline:2px solid #c8e58b;outline-offset:3px}
+.theme-icon{display:block;width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.theme-chevron{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .18s}
+.theme-chevron.is-open{transform:rotate(180deg)}
+.theme-menu{position:absolute;z-index:20;top:calc(100% + 10px);right:0;width:228px;padding:7px;border:1px solid rgba(174,198,155,.24);border-radius:18px;background:rgba(7,18,9,.97);box-shadow:0 18px 44px rgba(0,0,0,.32);backdrop-filter:blur(18px);animation:theme-menu-in .16s ease-out}
+.theme-option{display:grid;width:100%;grid-template-columns:38px 1fr 16px;align-items:center;gap:10px;border:0;border-radius:12px;padding:9px 10px;background:transparent;color:#eff5e9;text-align:left;cursor:pointer;transition:background .15s}
+.theme-option:hover{background:rgba(255,255,255,.08)}
+.theme-option.is-selected{background:rgba(109,151,45,.2)}
+.theme-option>.theme-icon{width:36px;height:36px;padding:9px;border-radius:11px;background:rgba(255,255,255,.07);color:#b9d984}
+.theme-option-copy{display:flex;flex-direction:column;gap:3px}
+.theme-option-copy strong{font-size:12px;font-weight:550}
+.theme-option-copy small{color:#a8b6a2;font-size:10px}
+.theme-check{width:15px;height:15px;fill:none;stroke:#b9d984;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@keyframes theme-menu-in{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 html[data-theme="dark"]{color-scheme:dark;color:#edf2eb;background:#080c09;--deep:#050906;--muted:#b6c1b1;--line:#263329}
 html[data-theme="dark"] body{color:#edf2eb;background:#080c09}
 html[data-theme="dark"] .intro-copy,html[data-theme="dark"] .standards-heading>p,html[data-theme="dark"] .standard-detail p,html[data-theme="dark"] .quote-section>p{color:#b8c3b4}
@@ -87,4 +99,4 @@ html[data-theme="dark"] .products-panel .category-card:first-child{background:#4
 html[data-theme="dark"] .strategic-focus-panel .strategy-grid article{background:#101b12}
 html[data-theme="dark"] .strategic-focus-panel .strategy-grid article:first-child{background:#49691b}
 html[data-theme="dark"] .site-footer{background:#030604}
-@media(max-width:800px){.theme-control{margin-left:auto}.theme-control-label{display:none}.theme-control select{min-width:78px;padding-block:7px}}
+@media(max-width:800px){.theme-control{margin-left:auto}.theme-trigger{min-height:38px;padding:7px 10px}.theme-menu{width:218px}}
