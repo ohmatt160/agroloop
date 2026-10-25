@@ -77,7 +77,13 @@ function QuoteForm() {
           requirements: values.get('requirements') || null,
         }),
       })
-      if (!response.ok) throw new Error(response.status === 429 ? 'Too many requests. Please try again shortly.' : 'We could not submit your request. Please try again.')
+      if (!response.ok) {
+        if (response.status === 429) throw new Error('Too many requests. Please try again shortly.')
+        if (response.status === 404 || response.status === 405) {
+          throw new Error('The quote service is not connected yet. Please try again later.')
+        }
+        throw new Error('We could not submit your request. Please try again.')
+      }
       if (!response.headers.get('content-type')?.includes('application/json')) {
         throw new Error('The quote service is not available yet. Please try again later.')
       }
