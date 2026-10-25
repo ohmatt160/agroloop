@@ -1,7 +1,37 @@
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
 const A = '/assets/'
+type ThemePreference = 'system' | 'light' | 'dark'
+const THEME_STORAGE_KEY = 'agroloop-theme'
+const ThemeContext = createContext<{ theme: ThemePreference; setTheme: (theme: ThemePreference) => void }>({
+  theme: 'system',
+  setTheme: () => {},
+})
+
+function readThemePreference(): ThemePreference {
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY)
+    if (stored === 'light' || stored === 'dark') return stored
+  } catch {
+    // The system preference remains available when browser storage is disabled.
+  }
+  return 'system'
+}
+
+function ThemeControl() {
+  const { theme, setTheme } = useContext(ThemeContext)
+  return (
+    <label className="theme-control">
+      <span className="theme-control-label">Theme</span>
+      <select aria-label="Color theme" value={theme} onChange={event => setTheme(event.target.value as ThemePreference)}>
+        <option value="system">System</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+      </select>
+    </label>
+  )
+}
 const products = [
   { title: 'Industrial Feedstocks', text: 'Primary biological inputs produced at scale. Fresh and processed vegetables, cassava-based bulk inputs for industrial use.', tags: ['Food Manufacturing', 'Processing'] },
   { title: 'Biochemical Inputs', text: 'Biologically derived chemical and functional materials. Starches, flours, organic acids, and fermentation-based intermediates.', tags: ['Pharmaceutical', 'Food', 'Industrial'] },
@@ -35,7 +65,7 @@ function ArrowLink({ children, href = '/#products', light = false }: { children:
   return <a className={`arrow-link${light ? ' arrow-link-light' : ''}`} href={href}>{children}<span aria-hidden="true">↗</span></a>
 }
 function Header({ active }: { active: 'home' | 'buyers' | 'investors' }) {
-  return <header className="site-header"><Mark /><nav aria-label="Main navigation"><a className={active === 'home' ? 'active' : ''} href="/">Home</a><a className={active === 'buyers' ? 'active' : ''} href="/buyers">Buyers</a><a className={active === 'investors' ? 'active' : ''} href="/investors">Investors</a><a href="/#products">Products</a><a href="/#about">About</a></nav><a className="contact-link" href="mailto:info@agroloopfarms.com">Contact <span>↗</span></a></header>
+  return <header className="site-header"><Mark /><nav aria-label="Main navigation"><a className={active === 'home' ? 'active' : ''} href="/">Home</a><a className={active === 'buyers' ? 'active' : ''} href="/buyers">Buyers</a><a className={active === 'investors' ? 'active' : ''} href="/investors">Investors</a><a href="/#products">Products</a><a href="/#about">About</a></nav><ThemeControl /><a className="contact-link" href="mailto:info@agroloopfarms.com">Contact <span>↗</span></a></header>
 }
 function Hero({ page, title, description, image, action, actionHref }: { page: 'home' | 'buyers' | 'investors'; title: ReactNode; description: string; image: string; action: string; actionHref: string }) {
   return <section className={`hero hero-${page}`} style={{ backgroundImage: `linear-gradient(90deg,rgba(4,24,8,.42),rgba(3,24,7,.1) 56%,rgba(3,24,7,.22)),linear-gradient(180deg,rgba(4,20,6,.16),transparent 30%,rgba(4,20,6,.27)),url('${A}${image}')` }}><Header active={page} /><div className="hero-copy"><h1>{title}</h1><div className="hero-aside"><p>{description}</p><ArrowLink href={actionHref}>{action}</ArrowLink></div></div></section>
@@ -133,8 +163,35 @@ function InvestorPage() {
 }
 function Footer() { return <footer className="site-footer"><div className="footer-top"><div className="footer-brand"><Mark /><p>Industrial biological production systems</p></div><div><h3>Products</h3><a href="/#products">Industrial Feedstocks</a><a href="/#products">Bio-Chemical Inputs</a><a href="/#products">Bio-Extracts &amp; Actives</a><a href="/#products">Protein &amp; Biomass Systems</a></div><div><h3>Partners</h3><a href="/buyers">Industrial Buyers</a><a href="/buyers#quote">Out-Growers</a><a href="/investors">Investors</a><a href="/#about">Production Systems</a></div><div><h3>Contact</h3><a href="mailto:info@agroloopfarms.com">✉ info@agroloopfarms.com</a></div></div><div className="copyright">© 2026 Agroloop. All rights reserved.</div></footer> }
 export default function App() {
+  const [theme, setTheme] = useState<ThemePreference>(readThemePreference)
   const path = window.location.pathname.toLowerCase().replace(/\/$/, '') || '/'
   const page = path === '/buyers' ? 'buyers' : path === '/investors' ? 'investors' : 'home'
+  useEffect(() => {
+    const root = document.documentElement
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+    const applyTheme = () => {
+      const resolvedTheme = theme === 'system' ? (systemTheme.matches ? 'dark' : 'light') : theme
+      root.dataset.themePreference = theme
+      root.dataset.theme = resolvedTheme
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolvedTheme === 'dark' ? '#080c09' : '#092510')
+    }
+    applyTheme()
+    if (theme === 'system') systemTheme.addEventListener('change', applyTheme)
+    try {
+      if (theme === 'system') window.localStorage.removeItem(THEME_STORAGE_KEY)
+      else window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+    } catch {
+      // Theme still works for this session when browser storage is disabled.
+    }
+    return () => systemTheme.removeEventListener('change', applyTheme)
+  }, [theme])
+  useEffect(() => {
+    function syncThemePreference(event: StorageEvent) {
+      if (event.key === THEME_STORAGE_KEY || event.key === null) setTheme(readThemePreference())
+    }
+    window.addEventListener('storage', syncThemePreference)
+    return () => window.removeEventListener('storage', syncThemePreference)
+  }, [])
   useEffect(() => {
     const pageMeta = {
       home: {
@@ -158,7 +215,7 @@ export default function App() {
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', pageMeta.description)
     document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonical)
   }, [page, path])
-  return <><main>{page === 'buyers' ? <BuyerPage /> : page === 'investors' ? <InvestorPage /> : <HomePage />}</main><Footer /></>
+  return <ThemeContext.Provider value={{ theme, setTheme }}><main>{page === 'buyers' ? <BuyerPage /> : page === 'investors' ? <InvestorPage /> : <HomePage />}</main><Footer /></ThemeContext.Provider>
 }
 
 

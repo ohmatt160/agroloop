@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#092510" />
     <meta name="description" content="Agroloop supplies reliable, standardized vegetable inputs for Africa's food industry." />
+    <script>
+      (() => {
+        const storageKey = 'agroloop-theme'
+        const root = document.documentElement
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+        let preference = 'system'
+        try {
+          const stored = window.localStorage.getItem(storageKey)
+          if (stored === 'light' || stored === 'dark') preference = stored
+        } catch {}
+        root.dataset.themePreference = preference
+        const applyTheme = () => {
+          root.dataset.theme = preference === 'system' ? (systemTheme.matches ? 'dark' : 'light') : preference
+        }
+        applyTheme()
+        systemTheme.addEventListener('change', () => {
+          if (root.dataset.themePreference === 'system') applyTheme()
+        })
+        window.addEventListener('storage', event => {
+          if (event.key !== storageKey && event.key !== null) return
+          preference = event.newValue === 'light' || event.newValue === 'dark' ? event.newValue : 'system'
+          root.dataset.themePreference = preference
+          applyTheme()
+        })
+      })()
+    </script>
     <link rel="icon" type="image/png" href="/assets/wheat-icon.png" />
     <link rel="canonical" href="https://www.agroloopfarms.com/" />
     <meta property="og:type" content="website" />
