@@ -279,6 +279,29 @@ export default function App() {
     document.querySelector('meta[property="og:description"]')?.setAttribute('content', pageMeta.description)
     document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonical)
   }, [page, path])
+  useEffect(() => {
+    const targets = Array.from(document.querySelectorAll<HTMLElement>(
+      'main > section:not(.hero), main > .investor-transition-mark, .proof-grid > *, .category-grid > *, .buyer-actions > *, .investor-cards > *, .strategy-grid > *, .benefit-grid > *, .metrics-grid > *',
+    ))
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reducedMotion || !('IntersectionObserver' in window)) return
+
+    targets.forEach(target => target.classList.add('motion-reveal'))
+    document.documentElement.classList.add('motion-enabled')
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.06, rootMargin: '0px 0px -36px 0px' })
+    targets.forEach(target => observer.observe(target))
+    return () => {
+      observer.disconnect()
+      document.documentElement.classList.remove('motion-enabled')
+    }
+  }, [page])
   return <ThemeContext.Provider value={{ theme, setTheme }}><main>{page === 'buyers' ? <BuyerPage /> : page === 'investors' ? <InvestorPage /> : <HomePage />}</main><Footer /></ThemeContext.Provider>
 }
 
